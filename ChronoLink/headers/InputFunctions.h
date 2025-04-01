@@ -1,13 +1,40 @@
 #pragma once
-
 #include <windows.h>
 #include <deque>
 
-enum KEYEVENTS {
-	ESCAPE,
-	OTHER
+enum SPECIALWRITABLE
+{
+    NONE,
+    BACKSPACE,
+    ENTER,
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    DEL,
+    ESC
 };
 
-void textEditor(HANDLE hStdin);
+#ifndef KEYBOARD_H_
+#define KEYBOARD_H_
+class KEYBOARD
+{
+private:
+    INPUT_RECORD ir;
+    DWORD read;
 
-KEYEVENTS TakeKeyboardInput(HANDLE handle, std::deque<char>& left, std::deque<char>& right);
+public:
+    HANDLE terminalHandle;
+
+    char charPressed;
+
+    bool isSpecial;
+    bool ctrl;
+    bool alt;
+    SPECIALWRITABLE specialType;
+
+    void getKeypress();
+};
+#endif
+
+void textEditor(HANDLE hStdin);

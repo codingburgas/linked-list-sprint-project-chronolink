@@ -2,17 +2,139 @@
 #include <windows.h>
 #include <iostream>
 #include <deque>
+#include "../headers/ConsoleFunctions.h"
+
+void KEYBOARD::getKeypress()
+{
+    charPressed = NULL;
+    isSpecial = false;
+    ctrl = false;
+    alt = false;
+    specialType = NONE;
+
+    while (true)
+    {
+        ReadConsoleInput(terminalHandle, &ir, 1, &read);
+        if (ir.Event.KeyEvent.bKeyDown)
+        {
+            charPressed = ir.Event.KeyEvent.uChar.AsciiChar;
+
+            if (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+            {
+                isSpecial = true;
+                ctrl = true;
+            }
+
+            if (ir.Event.KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+            {
+                isSpecial = true;
+                alt = true;
+            }
+
+            switch (ir.Event.KeyEvent.wVirtualKeyCode)
+            {
+            case(VK_BACK):
+                isSpecial = true;
+                specialType = BACKSPACE;
+                charPressed = '\0';
+                break;
+            case(VK_RETURN):
+                isSpecial = true;
+                specialType = ENTER;
+                charPressed = '\0';
+                break;
+            case(VK_LEFT):
+                isSpecial = true;
+                specialType = LEFT;
+                break;
+            case(VK_UP):
+                isSpecial = true;
+                specialType = UP;
+                break;
+            case(VK_RIGHT):
+                isSpecial = true;
+                specialType = RIGHT;
+                break;
+            case(VK_DOWN):
+                isSpecial = true;
+                specialType = DOWN;
+                break;
+            case(VK_DELETE):
+                isSpecial = true;
+                specialType = DEL;
+                break;
+            case(VK_ESCAPE):
+                isSpecial = true;
+                specialType = ESC;
+                break;
+            }
+            break;
+        }
+
+    }
+};
+
+
 
 void textEditor(HANDLE hStdin) {
     std::string terminalMarks = ".!?";
     std::deque<char> left, right;
 
+    KEYBOARD keyboard;
+    keyboard.terminalHandle = hStdin;
+
     std::cout << "Press any key (ESC to exit)...\n";
 
     while (true) {
-        KEYEVENTS input;
-        input = TakeKeyboardInput(hStdin, left, right);
-        if (input == ESCAPE) break;
+        keyboard.getKeypress();
+
+        if (keyboard.isSpecial)
+        {
+            if (keyboard.specialType == ESC) break;
+
+
+            if (keyboard.ctrl)
+            {
+                if (keyboard.specialType == BACKSPACE)
+                {
+                    std::cout << "CTRL + BACKSPACE DETECTED";
+                    continue;
+                }
+            }
+
+
+            if (keyboard.specialType == BACKSPACE)
+            {
+                if (!left.empty()) {
+                    if (left.back() == '\t')
+                    {
+                        clear();
+                        left.pop_back();
+                        if (!left.empty()) {
+                            for (const char i : left) {
+                                std::cout << i;
+                            }
+                        }
+                        if (!right.empty()) {
+                            for (const char i : right) {
+                                std::cout << i;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        std::cout << "\b \b" << std::flush;
+                        left.pop_back();
+                    }
+                }
+            }
+
+        }
+        else
+        {
+            left.push_back(keyboard.charPressed);
+            std::cout << keyboard.charPressed;
+        }
     }
 
     std::cout << "\n" << std::flush;
@@ -26,42 +148,4 @@ void textEditor(HANDLE hStdin) {
             std::cout << i;
         }
     }
-}
-
-KEYEVENTS TakeKeyboardInput(HANDLE handle, std::deque<char>& left, std::deque<char>& right) {
-    INPUT_RECORD ir;
-    DWORD read;
-
-    ReadConsoleInput(handle, &ir, 1, &read);
-
-    if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown) {
-        WORD key = ir.Event.KeyEvent.wVirtualKeyCode;
-        DWORD ctrlState = ir.Event.KeyEvent.dwControlKeyState;
-        bool ctrl = ctrlState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED);
-
-        if (key == VK_ESCAPE) {
-            return ESCAPE;
-        }
-
-        if (!ctrl && key != VK_BACK) {
-            left.push_back(ir.Event.KeyEvent.uChar.AsciiChar);
-            std::cout << ir.Event.KeyEvent.uChar.AsciiChar;
-            return OTHER;
-        }
-
-        if (ctrl && key == VK_BACK) {
-            std::cout << "*** CTRL + BACKSPACE detected! ***\n";
-            return OTHER;
-        }
-
-        if (key == VK_BACK) {
-            if (!left.empty()) {
-                left.pop_back();
-                std::cout << "\b \b" << std::flush;
-            }
-            return OTHER;
-        }
-    }
-
-    return OTHER;
 }
