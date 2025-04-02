@@ -38,3 +38,5 @@ public:
 #endif
 
 void textEditor(HANDLE hStdin);
+
+void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, const SPECIALWRITABLE& direction);

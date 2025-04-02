@@ -68,9 +68,11 @@ void KEYBOARD::getKeypress()
                 specialType = ESC;
                 break;
             }
+            if (charPressed == NULL) {
+                isSpecial = true;
+            }
             break;
         }
-
     }
 };
 
@@ -82,8 +84,6 @@ void textEditor(HANDLE hStdin) {
 
     KEYBOARD keyboard;
     keyboard.terminalHandle = hStdin;
-
-    std::cout << "Press any key (ESC to exit)...\n";
 
     while (true) {
         keyboard.getKeypress();
@@ -98,17 +98,16 @@ void textEditor(HANDLE hStdin) {
                 if (keyboard.specialType == BACKSPACE)
                 {
                     std::cout << "CTRL + BACKSPACE DETECTED";
-                    continue;
                 }
             }
 
 
-            if (keyboard.specialType == BACKSPACE)
+            else if (keyboard.specialType == BACKSPACE)
             {
                 if (!left.empty()) {
                     if (left.back() == '\t')
                     {
-                        clear();
+                        clearScreen();
                         left.pop_back();
                         if (!left.empty()) {
                             for (const char i : left) {
@@ -128,12 +127,32 @@ void textEditor(HANDLE hStdin) {
                     }
                 }
             }
+            
+            else if (keyboard.specialType == LEFT) {
+                moveCursorLeftRight(left, right, LEFT);
+            }
 
+            else if (keyboard.specialType == RIGHT) {
+                moveCursorLeftRight(left, right, RIGHT);
+            }
         }
         else
         {
             left.push_back(keyboard.charPressed);
             std::cout << keyboard.charPressed;
+            if (!right.empty()) {
+                if (left.back() == '\t') {
+                    clearScreen();
+                    for (const char i : left) {
+                        std::cout << i;
+                    }
+                }
+                for (const char i : right) {
+                    std::cout << i;
+                }
+                COORD pos = getCursorPosition(left);
+                SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+            }
         }
     }
 
@@ -148,4 +167,18 @@ void textEditor(HANDLE hStdin) {
             std::cout << i;
         }
     }
+}
+
+void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, const SPECIALWRITABLE& direction) {
+    if (direction == LEFT && !left.empty()) {
+        right.push_front(left.back());
+        left.pop_back();
+    }
+    else if (direction == RIGHT && !right.empty()) {
+        left.push_back(right.front());
+        right.pop_front();
+    }
+
+    COORD pos = getCursorPosition(left);
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }

@@ -2,4 +2,8 @@
 
 void enableRawMode(HANDLE hStdin);
 
-void clear();
+void clearScreen();
+
+void clearLine();
+
+COORD getCursorPosition(const std::deque<char>& left);
