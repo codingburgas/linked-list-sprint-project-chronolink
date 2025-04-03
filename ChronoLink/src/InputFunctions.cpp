@@ -98,7 +98,31 @@ void textEditor(HANDLE& hStdin) {
             {
                 if (keyboard.specialType == BACKSPACE)
                 {
-                    std::cout << "CTRL + BACKSPACE DETECTED";
+                    bool skipChar = false;
+                    if (!left.empty()) {
+                        char lastChar = left.back();
+                        skipChar = (lastChar == ' ' || terminalMarks.find(lastChar) != std::string::npos);
+                    }
+                    while (!left.empty()) {
+                        left.pop_back();
+                        std::cout << "\b \b" << std::flush;
+                        if (left.empty()) break;
+                        char back = left.back();
+                        bool isBoundary = (back == ' ' || terminalMarks.find(back) != std::string::npos);
+                        if (isBoundary) {
+                            if (!skipChar) break;
+                            if (left.size() > 1) {
+                                char prevChar = left[left.size() - 2];
+                                skipChar = (prevChar == ' ' || terminalMarks.find(prevChar) != std::string::npos);
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                        else {
+                            skipChar = false;
+                        }
+                    }
                 }
             }
 
