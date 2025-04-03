@@ -2,7 +2,9 @@
 #include <windows.h>
 #include <iostream>
 #include <deque>
+#include <string>
 #include "../headers/ConsoleFunctions.h"
+#include "../headers/UtilityFunctions.h"
 
 void KEYBOARD::getKeypress()
 {
@@ -76,10 +78,9 @@ void KEYBOARD::getKeypress()
     }
 };
 
-
-
-void textEditor(HANDLE hStdin) {
-    std::string terminalMarks = ".!?";
+void textEditor(HANDLE& hStdin) {
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    std::string terminalMarks = ".!?"; // essential for *functional* ctrl + tab handling
     std::deque<char> left, right;
 
     KEYBOARD keyboard;
@@ -105,71 +106,54 @@ void textEditor(HANDLE hStdin) {
             else if (keyboard.specialType == BACKSPACE)
             {
                 if (!left.empty()) {
-                    if (left.back() == '\t')
+                    left.pop_back();
+                    if (!right.empty()) // if the last element is a tab
                     {
-                        clearScreen();
-                        left.pop_back();
-                        if (!left.empty()) {
-                            for (const char i : left) {
-                                std::cout << i;
-                            }
-                        }
-                        if (!right.empty()) {
-                            for (const char i : right) {
-                                std::cout << i;
-                            }
-                        }
+                        redrawLine(left, right);
                     }
                     else
                     {
                         std::cout << "\b \b" << std::flush;
-                        left.pop_back();
                     }
                 }
             }
             
             else if (keyboard.specialType == LEFT) {
-                moveCursorLeftRight(left, right, LEFT);
+                moveCursorLeftRight(left, right, hStdOut, LEFT);
             }
 
             else if (keyboard.specialType == RIGHT) {
-                moveCursorLeftRight(left, right, RIGHT);
+                moveCursorLeftRight(left, right, hStdOut, RIGHT);
             }
         }
         else
         {
             left.push_back(keyboard.charPressed);
-            std::cout << keyboard.charPressed;
-            if (!right.empty()) {
-                if (left.back() == '\t') {
-                    clearScreen();
-                    for (const char i : left) {
-                        std::cout << i;
-                    }
-                }
-                for (const char i : right) {
-                    std::cout << i;
-                }
+            if (right.empty()) {
+                if (left.back() == '\t') std::cout << "        "; // tabs in the console are with inconsistent length (one time it's gonna be 3 spaces and another 8). this brings it closer to a traditional text editor
+                else std::cout << keyboard.charPressed;
+            }
+            else {
                 COORD pos = getCursorPosition(left);
-                SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+                if (left.back() == '\t') {
+                    clearLine(); // sets the cursor position to 0 (by default) on that line and the new deque just prints out and takes the old one's place
+                    printDeque(left);
+                }
+                else {
+                    std::cout << keyboard.charPressed;
+                }
+                printDeque(right); // inserting 'charPressed' overwrites the first char of the right deque so this is necessary (writes the correct deque ontop of the one with the overwritten character)
+                SetConsoleCursorPosition(hStdOut, pos); // cout moves the console cursor along with it as it prints so we have to reset it here
             }
         }
     }
 
     std::cout << "\n" << std::flush;
-    if (!left.empty()) {
-        for (const char i : left) {
-            std::cout << i;
-        }
-    }
-    if (!right.empty()) {
-        for (const char i : right) {
-            std::cout << i;
-        }
-    }
+    printDeque(left);
+    printDeque(right);
 }
 
-void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, const SPECIALWRITABLE& direction) {
+void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, HANDLE& hStdOut, const SPECIALWRITABLE& direction) {
     if (direction == LEFT && !left.empty()) {
         right.push_front(left.back());
         left.pop_back();
@@ -180,5 +164,6 @@ void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, const 
     }
 
     COORD pos = getCursorPosition(left);
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+    SetConsoleCursorPosition(hStdOut, pos);
+    std::cout << std::flush;
 }

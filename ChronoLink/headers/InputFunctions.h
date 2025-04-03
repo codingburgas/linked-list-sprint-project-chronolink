@@ -37,6 +37,6 @@ public:
 };
 #endif
 
-void textEditor(HANDLE hStdin);
+void textEditor(HANDLE& hStdin);
 
-void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, const SPECIALWRITABLE& direction);
+void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, HANDLE& hStdOut, const SPECIALWRITABLE& direction);

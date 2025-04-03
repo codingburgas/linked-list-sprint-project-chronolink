@@ -21,11 +21,13 @@
   <ItemGroup>
     <ClInclude Include="headers\ConsoleFunctions.h" />
     <ClInclude Include="headers\InputFunctions.h" />
+    <ClInclude Include="headers\UtilityFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ChronoLink.cpp" />
     <ClCompile Include="src\ConsoleFunctions.cpp" />
     <ClCompile Include="src\InputFunctions.cpp" />
+    <ClCompile Include="src\UtilityFunctions.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
