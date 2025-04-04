@@ -78,9 +78,93 @@ void KEYBOARD::getKeypress()
     }
 };
 
-void textEditor(HANDLE& hStdin) {
+void appendAndEchoChar(std::deque<char>& deq, const char& ch) {
+
+    if (ch == '\t') {
+        for (int i = 0;i < 8;++i) {
+            deq.push_back(' ');
+        }
+        std::cout << "        ";
+    }
+    else {
+        std::cout << ch;
+        deq.push_back(ch);
+    }
+
+}
+
+void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
+
     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    std::string terminalMarks = ".!?"; // essential for *functional* ctrl + tab handling
+
+    const std::string terminalMarks = ".!?";
+
+    bool skipChar = false;
+
+    if (!left.empty()) {
+        char lastChar = left.back();
+        skipChar = (lastChar == ' ' || terminalMarks.find(lastChar) != std::string::npos);
+    }
+
+    while (!left.empty()) {
+        left.pop_back();
+        if (right.empty()) std::cout << "\b \b" << std::flush;
+        else redrawEverythingPastCursor(left, right, hStdOut);
+
+        if (left.empty()) break;
+
+        char back = left.back();
+        bool isBoundary = (back == ' ' || terminalMarks.find(back) != std::string::npos);
+
+        if (isBoundary) {
+
+            if (!skipChar) break;
+
+            if (left.size() > 1) {
+                char prevChar = left[left.size() - 2];
+                skipChar = (prevChar == ' ' || terminalMarks.find(prevChar) != std::string::npos);
+            }
+            else {
+                break;
+            }
+
+        }
+        else {
+            skipChar = false;
+        }
+    }
+
+}
+
+void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
+
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (!left.empty()) {
+        left.pop_back();
+        if (!right.empty())
+        {
+            redrawEverythingPastCursor(left, right, hStdOut);
+        }
+        else
+        {
+            std::cout << "\b \b" << std::flush;
+        }
+    }
+
+}
+
+void INSERTION_Handling(std::deque<char>& left, const std::deque<char>& right, const char& ch, HANDLE hStdOut) {
+
+    appendAndEchoChar(left, ch);
+
+    redrawEverythingPastCursor(left, right, hStdOut);
+
+}
+
+void textEditor(HANDLE hStdin) {
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
     std::deque<char> left, right;
 
     KEYBOARD keyboard;
@@ -98,96 +182,92 @@ void textEditor(HANDLE& hStdin) {
             {
                 if (keyboard.specialType == BACKSPACE)
                 {
-                    bool skipChar = false;
-                    if (!left.empty()) {
-                        char lastChar = left.back();
-                        skipChar = (lastChar == ' ' || terminalMarks.find(lastChar) != std::string::npos);
-                    }
-                    while (!left.empty()) {
-                        left.pop_back();
-                        std::cout << "\b \b" << std::flush;
-                        if (left.empty()) break;
-                        char back = left.back();
-                        bool isBoundary = (back == ' ' || terminalMarks.find(back) != std::string::npos);
-                        if (isBoundary) {
-                            if (!skipChar) break;
-                            if (left.size() > 1) {
-                                char prevChar = left[left.size() - 2];
-                                skipChar = (prevChar == ' ' || terminalMarks.find(prevChar) != std::string::npos);
-                            }
-                            else {
-                                break;
-                            }
-                        }
-                        else {
-                            skipChar = false;
-                        }
-                    }
+                    CTRLBACKSPACE_Handling(left, right);
                 }
             }
 
 
             else if (keyboard.specialType == BACKSPACE)
             {
-                if (!left.empty()) {
-                    left.pop_back();
-                    if (!right.empty()) // if the last element is a tab
-                    {
-                        redrawLine(left, right);
-                    }
-                    else
-                    {
-                        std::cout << "\b \b" << std::flush;
-                    }
-                }
+                BACKSPACE_Handling(left, right);
             }
             
             else if (keyboard.specialType == LEFT) {
-                moveCursorLeftRight(left, right, hStdOut, LEFT);
+                moveCursorLeftRightUpDown(left, right, hStdOut, LEFT);
             }
 
             else if (keyboard.specialType == RIGHT) {
-                moveCursorLeftRight(left, right, hStdOut, RIGHT);
+                moveCursorLeftRightUpDown(left, right, hStdOut, RIGHT);
+            }
+
+            else if (keyboard.specialType == UP) {
+                moveCursorLeftRightUpDown(left, right, hStdOut, UP);
+            }
+
+            else if (keyboard.specialType == DOWN) {
+                moveCursorLeftRightUpDown(left, right, hStdOut, DOWN);
             }
         }
-        else
+        else // if it's not a special input
         {
-            left.push_back(keyboard.charPressed);
-            if (right.empty()) {
-                if (left.back() == '\t') std::cout << "        "; // tabs in the console are with inconsistent length (one time it's gonna be 3 spaces and another 8). this brings it closer to a traditional text editor
-                else std::cout << keyboard.charPressed;
+            if (right.empty()) { // if the console cursor is at the end of the text
+                appendAndEchoChar(left, keyboard.charPressed);
             }
             else {
-                COORD pos = getCursorPosition(left);
-                if (left.back() == '\t') {
-                    clearLine(); // sets the cursor position to 0 (by default) on that line and the new deque just prints out and takes the old one's place
-                    printDeque(left);
-                }
-                else {
-                    std::cout << keyboard.charPressed;
-                }
-                printDeque(right); // inserting 'charPressed' overwrites the first char of the right deque so this is necessary (writes the correct deque ontop of the one with the overwritten character)
-                SetConsoleCursorPosition(hStdOut, pos); // cout moves the console cursor along with it as it prints so we have to reset it here
+                INSERTION_Handling(left, right, keyboard.charPressed, hStdOut);
             }
         }
     }
 
     std::cout << "\n" << std::flush;
+
     printDeque(left);
     printDeque(right);
 }
 
-void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, HANDLE& hStdOut, const SPECIALWRITABLE& direction) {
+void moveCursorLeftRightUpDown(std::deque<char>& left, std::deque<char>& right, HANDLE hStdOut, const SPECIALWRITABLE& direction) {
+    
+    COORD pos = getCursorPosition(left);
+
+    int width = getConsoleWidth();
+    int size = static_cast<int>(left.size()) + static_cast<int>(right.size());
+
     if (direction == LEFT && !left.empty()) {
         right.push_front(left.back());
         left.pop_back();
+        pos.X--;
     }
     else if (direction == RIGHT && !right.empty()) {
         left.push_back(right.front());
         right.pop_front();
+        pos.X++;
+    }
+    else if (direction == UP && size > width && pos.Y > 0) {
+        pos.Y--;
+        SetConsoleCursorPosition(hStdOut, pos);
+        std::cout << std::flush;
+        updateDeques(left, right, pos);
+        return;
+    }
+    else if (direction == DOWN && size > width && pos.Y < (size/width)) {
+        pos.Y++;
+        SetConsoleCursorPosition(hStdOut, pos);
+        std::cout << std::flush;
+        updateDeques(left, right, pos);
+        return;
     }
 
-    COORD pos = getCursorPosition(left);
-    SetConsoleCursorPosition(hStdOut, pos);
+
+    if (pos.X >= 0 && pos.X < static_cast<short>(width)) {
+        SetConsoleCursorPosition(hStdOut, pos);
+    }
+    else {
+        if (pos.X < 0)
+            SetConsoleCursorPosition(hStdOut, { static_cast<short>(width - 1), static_cast<short>(pos.Y - 1) });
+        else if (pos.X >= static_cast<short>(width))
+            SetConsoleCursorPosition(hStdOut, { 0, static_cast<short>(pos.Y + 1) });
+    }
+
     std::cout << std::flush;
+
 }

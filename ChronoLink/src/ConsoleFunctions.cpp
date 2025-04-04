@@ -26,60 +26,27 @@ void clearLine()
 }
 
 COORD getCursorPosition(const std::deque<char>& left) {
-    short x = 0, y = 0;
-    for (const char i : left) {
-        if (i == '\n') {
-            ++y;
-            x = 0;
-        }
-        else {
-            if (i == '\t') {
-                x += 8;
-            }
-            else {
-                ++x;
-            }
-        }
-    }
+    int width = getConsoleWidth();
+    int size = static_cast<int>(left.size());
+
+    short y = static_cast<short>(size / width);
+    short x = static_cast<short>(size % width);
+
     return { x, y };
 }
 
-void redrawLine(const std::deque<char>& left, const std::deque<char>& right) {
-    std::string buffer = ""; // i'm using a buffer string because it makes it flicker less when reprinting. this is due to the other method printing the characters one by one
+void redrawEverythingPastCursor(const std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut) { // necessary for multi-line text editing with insertion
+    COORD pos = getCursorPosition(left);
+    SetConsoleCursorPosition(hStdOut, pos);
 
-    if (!left.empty()) {
-        int startLeft = findLastNewline(left) + 1;
-        for (int i = startLeft; i < static_cast<int>(left.size()); i++) {
-            if (left[i] == '\t') {
-                buffer += "        ";
-            }
-            else {
-                buffer += left[i];
-            }
-        }
+    std::string buffer;
+    for (const char& ch : right) {
+        buffer += ch;
     }
 
-    if (!right.empty()) {
-        int endRight = findFirstNewline(right);
-        for (int i = 0; i < endRight; i++) {
-            if (right[i] == '\t') {
-                buffer += "        ";
-            }
-            else {
-                buffer += right[i];
-            }
-        }
-    }
+    buffer += ' ';
 
-    clearLine();
+    std::cout << buffer;
 
-    if (!buffer.empty()) {
-        std::cout << buffer;
-    }
-
-    if (!right.empty()) {
-        COORD pos = getCursorPosition(left);
-        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-        std::cout << std::flush;
-    }
+    SetConsoleCursorPosition(hStdOut, pos);
 }

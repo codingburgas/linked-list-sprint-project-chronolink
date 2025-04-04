@@ -37,6 +37,14 @@ public:
 };
 #endif
 
-void textEditor(HANDLE& hStdin);
+void appendAndEchoChar(std::deque<char>& deq, const char& ch);
 
-void moveCursorLeftRight(std::deque<char>& left, std::deque<char>& right, HANDLE& hStdOut, const SPECIALWRITABLE& direction);
+void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right);
+
+void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right);
+
+void INSERTION_Handling(std::deque<char>& left, const std::deque<char>& right, const char& ch, HANDLE hStdOut);
+
+void textEditor(HANDLE hStdin);
+
+void moveCursorLeftRightUpDown(std::deque<char>& left, std::deque<char>& right, HANDLE hStdOut, const SPECIALWRITABLE& direction);
