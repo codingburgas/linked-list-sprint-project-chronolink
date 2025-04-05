@@ -39,9 +39,9 @@ public:
 
 void appendAndEchoChar(std::deque<char>& deq, const char& ch);
 
-void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right);
+void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut);
 
-void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right);
+void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut);
 
 void INSERTION_Handling(std::deque<char>& left, const std::deque<char>& right, const char& ch, HANDLE hStdOut);
 

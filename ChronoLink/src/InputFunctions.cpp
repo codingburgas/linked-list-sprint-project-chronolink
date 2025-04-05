@@ -93,66 +93,58 @@ void appendAndEchoChar(std::deque<char>& deq, const char& ch) {
 
 }
 
-void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
-
-    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
+void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut) {
     const std::string terminalMarks = ".!?";
 
-    bool skipChar = false;
-
-    if (!left.empty()) {
-        char lastChar = left.back();
-        skipChar = (lastChar == ' ' || terminalMarks.find(lastChar) != std::string::npos);
+    while (!left.empty() && (left.back() == ' ' || terminalMarks.find(left.back()) != std::string::npos)) {
+        left.pop_back();
     }
 
     while (!left.empty()) {
-        left.pop_back();
-        if (right.empty()) std::cout << "\b \b" << std::flush;
-        else redrawEverythingPastCursor(left, right, hStdOut);
-
-        if (left.empty()) break;
-
         char back = left.back();
-        bool isBoundary = (back == ' ' || terminalMarks.find(back) != std::string::npos);
-
-        if (isBoundary) {
-
-            if (!skipChar) break;
-
-            if (left.size() > 1) {
-                char prevChar = left[left.size() - 2];
-                skipChar = (prevChar == ' ' || terminalMarks.find(prevChar) != std::string::npos);
-            }
-            else {
-                break;
-            }
-
+        if (back == ' ' || terminalMarks.find(back) != std::string::npos) {
+            redrawScreen(left, right, hStdOut);
+            return;
         }
-        else {
-            skipChar = false;
-        }
+        left.pop_back();
     }
-
+    redrawScreen(left, right, hStdOut);
 }
 
-void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
+void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut) {
 
-    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (left.empty()) return;
 
-    if (!left.empty()) {
-        left.pop_back();
-        if (!right.empty())
-        {
+    COORD pos = getCursorPosition(left); // get cursor coordinates based on `left` size
+    bool wentBackALine = false;
+
+    if (pos.X == 0 && pos.Y > 0) { // only go back a row if not on the first line
+        int width = getConsoleWidth();
+        pos = { static_cast<short>(width - 1), static_cast<short>(pos.Y - 1) };
+
+        SetConsoleCursorPosition(hStdOut, pos);
+        wentBackALine = true;
+    }
+
+    left.pop_back();
+
+    if (wentBackALine) {
+        redrawLine(left, hStdOut);
+        if (!right.empty()) {
             redrawEverythingPastCursor(left, right, hStdOut);
         }
-        else
-        {
+    }
+    else {
+        if (!right.empty()) {
+            redrawEverythingPastCursor(left, right, hStdOut);
+        }
+        else {
             std::cout << "\b \b" << std::flush;
         }
     }
 
 }
+
 
 void INSERTION_Handling(std::deque<char>& left, const std::deque<char>& right, const char& ch, HANDLE hStdOut) {
 
@@ -182,14 +174,14 @@ void textEditor(HANDLE hStdin) {
             {
                 if (keyboard.specialType == BACKSPACE)
                 {
-                    CTRLBACKSPACE_Handling(left, right);
+                    CTRLBACKSPACE_Handling(left, right, hStdOut);
                 }
             }
 
 
             else if (keyboard.specialType == BACKSPACE)
             {
-                BACKSPACE_Handling(left, right);
+                BACKSPACE_Handling(left, right, hStdOut);
             }
             
             else if (keyboard.specialType == LEFT) {

@@ -24,9 +24,6 @@ int getConsoleWidth() {
 
 void centerText(const std::string& text) {
 	int consoleWidth = getConsoleWidth();
-	if (consoleWidth <= 0) {
-		consoleWidth = 160; // fall back to the default width
-	}
 
 	int paddingLeft = max((consoleWidth - (int)text.length()) / 2, 0);
 	std::cout << std::string(paddingLeft, ' ') << text;
