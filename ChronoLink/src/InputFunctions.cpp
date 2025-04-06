@@ -1,82 +1,12 @@
 #include "../headers/InputFunctions.h"
+#include "../headers/ConsoleFunctions.h"
+#include "../headers/UtilityFunctions.h"
+#include "../headers/Classes.h"
+#include "../headers/Globals.h"
 #include <windows.h>
 #include <iostream>
 #include <deque>
 #include <string>
-#include "../headers/ConsoleFunctions.h"
-#include "../headers/UtilityFunctions.h"
-
-void KEYBOARD::getKeypress()
-{
-    charPressed = NULL;
-    isSpecial = false;
-    ctrl = false;
-    alt = false;
-    specialType = NONE;
-
-    while (true)
-    {
-        ReadConsoleInput(terminalHandle, &ir, 1, &read);
-        if (ir.Event.KeyEvent.bKeyDown)
-        {
-            charPressed = ir.Event.KeyEvent.uChar.AsciiChar;
-
-            if (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-            {
-                isSpecial = true;
-                ctrl = true;
-            }
-
-            if (ir.Event.KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
-            {
-                isSpecial = true;
-                alt = true;
-            }
-
-            switch (ir.Event.KeyEvent.wVirtualKeyCode)
-            {
-            case(VK_BACK):
-                isSpecial = true;
-                specialType = BACKSPACE;
-                charPressed = '\0';
-                break;
-            case(VK_RETURN):
-                isSpecial = true;
-                specialType = ENTER;
-                charPressed = '\0';
-                break;
-            case(VK_LEFT):
-                isSpecial = true;
-                specialType = LEFT;
-                break;
-            case(VK_UP):
-                isSpecial = true;
-                specialType = UP;
-                break;
-            case(VK_RIGHT):
-                isSpecial = true;
-                specialType = RIGHT;
-                break;
-            case(VK_DOWN):
-                isSpecial = true;
-                specialType = DOWN;
-                break;
-            case(VK_DELETE):
-                isSpecial = true;
-                specialType = DEL;
-                break;
-            case(VK_ESCAPE):
-                isSpecial = true;
-                specialType = ESC;
-                break;
-            }
-            if (charPressed == NULL) {
-                isSpecial = true;
-            }
-            break;
-        }
-    }
-};
 
 void appendAndEchoChar(std::deque<char>& deq, const char& ch) {
 
@@ -93,25 +23,27 @@ void appendAndEchoChar(std::deque<char>& deq, const char& ch) {
 
 }
 
-void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut) {
-    const std::string terminalMarks = ".!?";
+void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
+    const std::string TERMINALMARKS = ".!?";
 
-    while (!left.empty() && (left.back() == ' ' || terminalMarks.find(left.back()) != std::string::npos)) {
+    while (!left.empty() && (left.back() == ' ' || TERMINALMARKS.find(left.back()) != std::string::npos)) {
         left.pop_back();
     }
 
     while (!left.empty()) {
         char back = left.back();
-        if (back == ' ' || terminalMarks.find(back) != std::string::npos) {
-            redrawScreen(left, right, hStdOut);
+        if (back == ' ' || TERMINALMARKS.find(back) != std::string::npos) {
+            redrawScreen(left, right);
             return;
         }
         left.pop_back();
     }
-    redrawScreen(left, right, hStdOut);
+    redrawScreen(left, right);
 }
 
-void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut) {
+void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
+
+    HANDLE hStdOut = console.getOutputHandle();
 
     if (left.empty()) return;
 
@@ -129,14 +61,14 @@ void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, H
     left.pop_back();
 
     if (wentBackALine) {
-        redrawLine(left, hStdOut);
+        redrawLine(left);
         if (!right.empty()) {
-            redrawEverythingPastCursor(left, right, hStdOut);
+            redrawEverythingPastCursor(left, right);
         }
     }
     else {
         if (!right.empty()) {
-            redrawEverythingPastCursor(left, right, hStdOut);
+            redrawEverythingPastCursor(left, right);
         }
         else {
             std::cout << "\b \b" << std::flush;
@@ -146,21 +78,19 @@ void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right, H
 }
 
 
-void INSERTION_Handling(std::deque<char>& left, const std::deque<char>& right, const char& ch, HANDLE hStdOut) {
+void INSERTION_Handling(std::deque<char>& left, const std::deque<char>& right, const char& ch) {
+    
+    HANDLE hStdOut = console.getOutputHandle();
 
     appendAndEchoChar(left, ch);
 
-    redrawEverythingPastCursor(left, right, hStdOut);
+    redrawEverythingPastCursor(left, right);
 
 }
 
-void textEditor(HANDLE hStdin) {
-    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+void textEditor() {
 
     std::deque<char> left, right;
-
-    KEYBOARD keyboard;
-    keyboard.terminalHandle = hStdin;
 
     while (true) {
         keyboard.getKeypress();
@@ -174,30 +104,30 @@ void textEditor(HANDLE hStdin) {
             {
                 if (keyboard.specialType == BACKSPACE)
                 {
-                    CTRLBACKSPACE_Handling(left, right, hStdOut);
+                    CTRLBACKSPACE_Handling(left, right);
                 }
             }
 
 
             else if (keyboard.specialType == BACKSPACE)
             {
-                BACKSPACE_Handling(left, right, hStdOut);
+                BACKSPACE_Handling(left, right);
             }
             
             else if (keyboard.specialType == LEFT) {
-                moveCursorLeftRightUpDown(left, right, hStdOut, LEFT);
+                moveCursorLeftRightUpDown(left, right, LEFT);
             }
 
             else if (keyboard.specialType == RIGHT) {
-                moveCursorLeftRightUpDown(left, right, hStdOut, RIGHT);
+                moveCursorLeftRightUpDown(left, right, RIGHT);
             }
 
             else if (keyboard.specialType == UP) {
-                moveCursorLeftRightUpDown(left, right, hStdOut, UP);
+                moveCursorLeftRightUpDown(left, right, UP);
             }
 
             else if (keyboard.specialType == DOWN) {
-                moveCursorLeftRightUpDown(left, right, hStdOut, DOWN);
+                moveCursorLeftRightUpDown(left, right, DOWN);
             }
         }
         else // if it's not a special input
@@ -206,7 +136,7 @@ void textEditor(HANDLE hStdin) {
                 appendAndEchoChar(left, keyboard.charPressed);
             }
             else {
-                INSERTION_Handling(left, right, keyboard.charPressed, hStdOut);
+                INSERTION_Handling(left, right, keyboard.charPressed);
             }
         }
     }
@@ -217,8 +147,10 @@ void textEditor(HANDLE hStdin) {
     printDeque(right);
 }
 
-void moveCursorLeftRightUpDown(std::deque<char>& left, std::deque<char>& right, HANDLE hStdOut, const SPECIALWRITABLE& direction) {
+void moveCursorLeftRightUpDown(std::deque<char>& left, std::deque<char>& right, const SPECIALWRITABLE& direction) {
     
+    HANDLE hStdOut = console.getOutputHandle();
+
     COORD pos = getCursorPosition(left);
 
     int width = getConsoleWidth();

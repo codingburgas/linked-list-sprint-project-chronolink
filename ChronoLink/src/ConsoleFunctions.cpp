@@ -1,23 +1,31 @@
 #include "../headers/UtilityFunctions.h"
+#include "../headers/Classes.h"
+#include "../headers/Globals.h"
 #include <windows.h>
 #include <iostream>
 #include <deque>
 
-void enableRawMode(HANDLE hStdin) {
-    if (hStdin == INVALID_HANDLE_VALUE) {
+bool enableRawMode() {
+    HANDLE hStdIn = console.getInputHandle();
+
+    if (hStdIn == INVALID_HANDLE_VALUE) {
         std::cerr << "Error getting handle\n";
-        return;
+        return 0;
     }
 
     DWORD mode;
-    GetConsoleMode(hStdin, &mode);
-    SetConsoleMode(hStdin, mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT));
+    GetConsoleMode(hStdIn, &mode);
+    SetConsoleMode(hStdIn, mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT));
+
+    return 1;
 }
 
-void clearScreen(HANDLE hStdOut) {
-    std::cout << "\r\x1b[2K" << std::flush;
-    SetConsoleCursorPosition(hStdOut, { 0 , 0 });
-    std::cout << std::flush;
+void clearScreen() {    // ASNI commands sometimes fail with multi-line text
+    #ifdef _WIN32       // using them for clearing a single line still works though
+        system("cls");
+    #elif
+        system("clear");
+    #endif
 }
 
 void clearLine()
@@ -35,7 +43,9 @@ COORD getCursorPosition(const std::deque<char>& left) {
     return { x, y };
 }
 
-void redrawEverythingPastCursor(const std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut) { // necessary for multi-line text editing with insertion
+void redrawEverythingPastCursor(const std::deque<char>& left, const std::deque<char>& right) { // necessary for multi-line text editing with insertion
+    HANDLE hStdOut = console.getOutputHandle();
+    
     COORD pos = getCursorPosition(left);
     SetConsoleCursorPosition(hStdOut, pos);
 
@@ -51,10 +61,12 @@ void redrawEverythingPastCursor(const std::deque<char>& left, const std::deque<c
     SetConsoleCursorPosition(hStdOut, pos);
 }
 
-void redrawScreen(const std::deque<char>& left, const std::deque<char>& right, HANDLE hStdOut) {
+void redrawScreen(const std::deque<char>& left, const std::deque<char>& right) {
+    HANDLE hStdOut = console.getOutputHandle();
+    
     COORD pos = getCursorPosition(left);
 
-    system("cls"); // ASNI commands sometimes fail with multi-line text
+    clearScreen();
 
     std::string buffer(left.begin(), left.end());
     buffer.append(right.begin(), right.end());
@@ -64,7 +76,9 @@ void redrawScreen(const std::deque<char>& left, const std::deque<char>& right, H
     SetConsoleCursorPosition(hStdOut, pos);
 }
 
-void redrawLine(const std::deque<char>& left, HANDLE hStdOut) {
+void redrawLine(const std::deque<char>& left) {
+    HANDLE hStdOut = console.getOutputHandle();
+    
     if (!left.empty()) {
         COORD pos = getCursorPosition(left);
 

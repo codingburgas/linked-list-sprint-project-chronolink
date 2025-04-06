@@ -1,12 +1,13 @@
 #include <windows.h>
 #include "../headers/InputFunctions.h"
 #include "../headers/ConsoleFunctions.h"
+#include <ctime>
+#include <iostream>
 
 int main() {
-    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-    enableRawMode(hStdin);
+    if (!enableRawMode()) return 0;
     
-    textEditor(hStdin);
+    textEditor();
 
-    return 0;
+    return 1;
 }
