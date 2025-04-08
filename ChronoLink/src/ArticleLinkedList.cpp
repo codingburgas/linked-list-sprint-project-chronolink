@@ -21,14 +21,11 @@ namespace ArticlesLinkedList
 
         std::ofstream outFile(filePath);
         if (!outFile.is_open()) {
-            std::cerr << "Failed to open file: " << fs::absolute(filePath) << std::endl;
             return;
         }
 
         outFile << yearOfEvent << "\n";
         outFile << articleText << "\n";
-
-        std::cout << "Article published to: " << fs::absolute(filePath) << std::endl;
     }
 
 

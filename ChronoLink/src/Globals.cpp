@@ -4,10 +4,10 @@
 namespace Globals
 {
 
-	Classes::Console console;
+	Classes::Console console; // class
 
-	Classes::Keyboard keyboard(console);
+	Classes::Keyboard keyboard(console); // class
 
-	ArticlesLinkedList::Article* head = nullptr;
+	ArticlesLinkedList::Article* head = nullptr; // main linked list
 
 }

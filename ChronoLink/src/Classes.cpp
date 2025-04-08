@@ -4,13 +4,15 @@
 
 namespace Classes
 {
+    // create a class with the output / input handle to reduce unnecessary GetStdHandle() calls and
+    // not have to pass the handles to so many functions
 
     Console::Console() {
         hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
         hStdIn = GetStdHandle(STD_INPUT_HANDLE);
     }
 
-    HANDLE Console::getOutputHandle() const {
+    HANDLE Console::getOutputHandle() const { // declare the functions as const because they don't change any values
         return hStdOut;
     }
 
@@ -18,12 +20,15 @@ namespace Classes
         return hStdIn;
     }
 
+    // the 'Keyboard' class' constructor; initializes the member variables of the class
     Keyboard::Keyboard(Console& console)
         : terminalHandle(console.getInputHandle()),
         charPressed('\0'),
         isSpecial(false),
         ctrl(false),
         alt(false),
+        read(NULL),
+        ir(),
         specialType(InputFunctions::SPECIALWRITABLE::NONE) // declared as an enum type
     { }
 
@@ -40,7 +45,7 @@ namespace Classes
             ReadConsoleInput(terminalHandle, &ir, 1, &read);
             if (ir.Event.KeyEvent.bKeyDown)
             {
-                charPressed = ir.Event.KeyEvent.uChar.AsciiChar;
+                charPressed = ir.Event.KeyEvent.uChar.AsciiChar; // gets the input
 
                 if (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
                 {
@@ -58,7 +63,7 @@ namespace Classes
                 {
                 case(VK_BACK):
                     isSpecial = true;
-                    specialType = InputFunctions::BACKSPACE;
+                    specialType = InputFunctions::BACKSPACE; // enum type declared in InputFunctions.h
                     charPressed = '\0';
                     break;
                 case(VK_RETURN):

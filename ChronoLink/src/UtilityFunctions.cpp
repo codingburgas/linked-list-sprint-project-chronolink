@@ -24,6 +24,7 @@ namespace UtilityFunctions
 		std::cout << std::string(paddingLeft, ' ') << text;
 	}
 
+	// uses an algorithm similar to binary search to make the left deque be everything before the console cursor and vice versa
 	void updateDeques(std::deque<char>& left, std::deque<char>& right, COORD pos) {
 
 		int width = ConsoleFunctions::getConsoleWidth();

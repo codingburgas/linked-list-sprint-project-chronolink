@@ -11,6 +11,7 @@
 namespace InputFunctions
 {
 
+    // setting the console to raw mode comes with the removal of echoing the user's input so this is needed
     void appendAndEchoChar(std::deque<char>& deq, const char& ch) {
 
         if (ch == '\t') {
@@ -27,9 +28,11 @@ namespace InputFunctions
     }
 
     void CTRLBACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
-        const std::string terminalMarks = ".!?";
         if (left.empty()) return;
 
+        const std::string terminalMarks = ".!?"; // deleting stops at a space or either of these
+
+        // deletes trailing characters
         while (!left.empty() && (left.back() == ' ' || terminalMarks.find(left.back()) != std::string::npos)) {
             left.pop_back();
         }
@@ -37,12 +40,12 @@ namespace InputFunctions
         while (!left.empty()) {
             char back = left.back();
             if (back == ' ' || terminalMarks.find(back) != std::string::npos) {
-                ConsoleFunctions::redrawScreen(left, right);
+                ConsoleFunctions::redrawScreen(left, right); // only redraws screen when the program is done deleting
                 return;
             }
             left.pop_back();
         }
-        ConsoleFunctions::redrawScreen(left, right);
+        ConsoleFunctions::redrawScreen(left, right); // redraws the screen if the terminal start is reached before a space or a terminal mark is found
     }
 
     void BACKSPACE_Handling(std::deque<char>& left, const std::deque<char>& right) {
@@ -72,16 +75,17 @@ namespace InputFunctions
         }
         else {
             if (!right.empty()) {
-                ConsoleFunctions::redrawEverythingPastCursor(left, right);
+                ConsoleFunctions::redrawEverythingPastCursor(left, right); // redraws everything past cursor if deleting in the middle of the text
             }
             else {
-                std::cout << "\b \b" << std::flush;
+                std::cout << "\b \b" << std::flush; // otherwise, just overwrites one character from the back
             }
         }
 
     }
 
 
+    //redraws everything past the console cursor if inserting in the middle of the text
     void INSERTION_Handling(std::deque<char>& left, const std::deque<char>& right, const char& ch) {
     
         HANDLE hStdOut = Globals::console.getOutputHandle();
