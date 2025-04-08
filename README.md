@@ -19,11 +19,11 @@
 
 ## 📄 Documents
 
-### Code & Documentation
-  - [Documentation]()
+### Documentation
+  - [Documentation](https://codingburgas-my.sharepoint.com/:w:/g/personal/aapopova22_codingburgas_bg/EVWnREu3NTFJga_aJzcqNjIBI-t_HjQ2S3q67Pc1s3rqiA?e=csZ2qa)
 
-### Presenting
-  - [Presentation]()
+### Presentation
+  - [Presentation](https://codingburgas-my.sharepoint.com/:p:/g/personal/aapopova22_codingburgas_bg/EUfNM13OOLZOmczhVvVCp44BtiS0iD_YC0NkutK3KX5r5w?e=4MkAC2)
 
 
 ## 👥 Our Team
