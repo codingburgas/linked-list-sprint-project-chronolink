@@ -1,27 +1,21 @@
+#pragma once
+
 #include <string>
-#include <filesystem>
-#include <fstream>
-#include <regex>
 
-namespace fs = std::filesystem;
+namespace ArticlesLinkedList
+{
 
-struct Article {
-	int yearOfEvent;
-	std::string title;
-	std::string articleText;
-	Article* prev;
-	Article* next;
+	struct Article {
+		int yearOfEvent;
+		std::string title;
+		std::string articleText;
+		bool isDraft;
+		Article* prev;
+		Article* next;
 
-	void publish() {
-		std::string safeTitle = std::regex_replace(title, std::regex(R"([\/:*?"<>|])"), "_");
-		std::string filename = safeTitle + ".txt";
+		void publish() const;
 
-		fs::current_path("../../Articles");
-		std::ofstream outFile(filename);
+		void selectArticle();
+	};
 
-		outFile << yearOfEvent << "\n";
-		outFile << articleText << "\n";
-
-		outFile.close();
-	}
-};
+}

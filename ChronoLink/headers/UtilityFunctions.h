@@ -4,10 +4,13 @@
 #include <string>
 #include <windows.h>
 
-void printDeque(const std::deque<char>& deq);
+namespace UtilityFunctions
+{
 
-int getConsoleWidth();
+	void printDeque(const std::deque<char>& deq);
 
-void centerText(const std::string& text);
+	void centerText(const std::string& text);
 
-void updateDeques(std::deque<char>& left, std::deque<char>& right, COORD pos);
+	void updateDeques(std::deque<char>& left, std::deque<char>& right, COORD pos);
+
+}

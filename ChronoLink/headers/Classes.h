@@ -2,37 +2,41 @@
 #define CLASSES_H
 
 #include <windows.h>
-#include <string>
 #include "InputFunctions.h"
 
-class Console {
-private:
-    HANDLE hStdOut;
-    HANDLE hStdIn;
+namespace Classes
+{
 
-public:
-    Console();
+    class Console {
+    private:
+        HANDLE hStdOut;
+        HANDLE hStdIn;
 
-    HANDLE getOutputHandle();
-    HANDLE getInputHandle();
-};
+    public:
+        Console();
 
-class Keyboard {
-private:
-    INPUT_RECORD ir;
-    DWORD read;
+        HANDLE getOutputHandle() const;
+        HANDLE getInputHandle() const;
+    };
 
-public:
-    HANDLE terminalHandle;
+    class Keyboard {
+    private:
+        INPUT_RECORD ir;
+        DWORD read;
 
-    char charPressed;
-    bool isSpecial;
-    bool ctrl;
-    bool alt;
-    SPECIALWRITABLE specialType;
+    public:
+        HANDLE terminalHandle;
 
-    Keyboard(Console& console);
-    void getKeypress();
-};
+        char charPressed;
+        bool isSpecial;
+        bool ctrl;
+        bool alt;
+        InputFunctions::SPECIALWRITABLE specialType;
+
+        Keyboard(Console& console);
+        void getKeypress();
+    };
+
+}
 
 #endif

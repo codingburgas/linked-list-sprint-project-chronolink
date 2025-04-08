@@ -1,18 +1,28 @@
-#pragma once
+# pragma once
 
-#include <windows.h>
 #include <deque>
+#include <string>
+#include <windows.h>
 
-bool enableRawMode();
+namespace ConsoleFunctions
+{
 
-void clearScreen();
+	bool enableRawMode();
 
-void clearLine();
+	void clearScreen();
 
-COORD getCursorPosition(const std::deque<char>& left);
+	int getConsoleWidth();
 
-void redrawEverythingPastCursor(const std::deque<char>& left, const std::deque<char>& right);
+	COORD getCursorPosition(const std::deque<char>& left);
 
-void redrawLine(const std::deque<char>& left);
+	void redrawEverythingPastCursor(const std::deque<char>& left, const std::deque<char>& right);
 
-void redrawScreen(const std::deque<char>& left, const std::deque<char>& right);
+	void redrawLine(const std::deque<char>& left);
+
+	void redrawScreen(const std::deque<char>& left, const std::deque<char>& right);
+
+	void changeColor(const int& Color, std::string& text);
+
+	void printColored(std::string& text);
+
+}

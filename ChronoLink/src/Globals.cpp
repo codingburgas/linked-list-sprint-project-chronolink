@@ -1,6 +1,13 @@
 #include "../headers/Globals.h"
-#include "../headers/Classes.h"
+#include "../headers/ArticlesLinkedList.h"
 
-Console console;
+namespace Globals
+{
 
-Keyboard keyboard(console);
+	Classes::Console console;
+
+	Classes::Keyboard keyboard(console);
+
+	ArticlesLinkedList::Article* head = nullptr;
+
+}
