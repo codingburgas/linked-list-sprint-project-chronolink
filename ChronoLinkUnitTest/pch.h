@@ -3,7 +3,6 @@
 
 #include <deque>
 #include <windows.h>
-#include <headers/InputFunctions.h>
 #include <string>
 
 int getConsoleWidth();
